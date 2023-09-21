@@ -1,176 +1,181 @@
 import React, {
-  Fragment,
-  JSX,
-  memo,
   useCallback,
+  useState,
+  useRef,
   useEffect,
   useMemo,
-  useRef,
-  useState,
+  memo,
+  Fragment,
 } from 'react';
 
 import {
+  View,
+  SafeAreaView,
+  TouchableOpacity,
+  Text,
+  Image,
+  FlatList,
+  TextInput,
+  Dimensions,
+  ScrollView,
+  Modal,
   ActivityIndicator,
   BackHandler,
-  Dimensions,
-  Image,
-  Modal,
   Platform,
-  SafeAreaView,
   StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+  Alert,
 } from 'react-native';
 
-import { FlatList, ScrollView } from 'react-native-gesture-handler';
-import {
-  ASCII_CODE,
-  BADGE_COLORS,
-  BADGE_DOT_COLORS,
-  DROPDOWN_DIRECTION,
-  GET_DROPDOWN_DIRECTION,
-  GET_TRANSLATION,
-  LANGUAGE,
-  LIST_MODE,
-  MODE,
-  RTL_DIRECTION,
-  RTL_STYLE,
-  SCHEMA,
-  TRANSLATIONS,
-} from '../constants';
+import { Chip } from 'react-native-paper';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
-import Colors from '../constants/colors';
-import THEMES from '../themes';
-import ListEmpty from './ListEmpty';
-import RenderBadgeItem from './RenderBadgeItem';
-import RenderListItem from './RenderListItem';
 
 const { height: WINDOW_HEIGHT } = Dimensions.get('window');
 
+import Colors from '../constants/colors';
+import {
+  SCHEMA,
+  GET_TRANSLATION,
+  BADGE_COLORS,
+  BADGE_DOT_COLORS,
+  ASCII_CODE,
+  TRANSLATIONS,
+  MODE,
+  LIST_MODE,
+  DROPDOWN_DIRECTION,
+  GET_DROPDOWN_DIRECTION,
+  LANGUAGE,
+  RTL_DIRECTION,
+  RTL_STYLE
+} from '../constants';
+import THEMES from '../themes';
+import RenderBadgeItem from './RenderBadgeItem';
+import RenderListItem from './RenderListItem';
+import ListEmpty from './ListEmpty';
+
 function Picker({
-  items = [],
-  setItems = () => {},
-  open,
-  setOpen = () => {},
   value = null,
-  setValue = (callback) => {},
-  activityIndicatorColor = Colors.GREY,
-  ActivityIndicatorComponent = null,
-  activityIndicatorSize = 30,
-  addCustomItem = false,
-  ArrowDownIconComponent = null,
-  arrowIconContainerStyle = {},
+  items = [],
+  open,
+  showSelected,
+  filters=[],
+  setFilters  = () => {},
+  placeholder = null,
+  closeAfterSelecting = true,
+  labelProps = {},
+  disabled = false,
+  disabledStyle = {},
+  placeholderStyle = {},
+  containerStyle = {},
+  style = {},
+  textStyle = {},
+  labelStyle = {},
   arrowIconStyle = {},
-  ArrowUpIconComponent = null,
-  autoScroll = false,
-  badgeColors = BADGE_COLORS,
-  badgeDotColors = BADGE_DOT_COLORS,
-  badgeDotStyle = {},
-  badgeProps = {},
-  badgeSeparatorStyle = {},
+  tickIconStyle = {},
+  closeIconStyle = {},
+  hideSelectedItemIcon = false,
   badgeStyle = {},
   badgeTextStyle = {},
-  bottomOffset = 0,
-  categorySelectable = true,
-  closeAfterSelecting = true,
-  CloseIconComponent = null,
-  closeIconContainerStyle = {},
-  closeIconStyle = {},
-  closeOnBackPressed = false,
-  containerProps = {},
-  containerStyle = {},
-  customItemContainerStyle = {},
-  customItemLabelStyle = {},
-  disableBorderRadius = true,
-  disabled = false,
-  disabledItemContainerStyle = {},
-  disabledItemLabelStyle = {},
-  disabledStyle = {},
-  disableLocalSearch = false,
-  dropDownContainerStyle = {},
-  dropDownDirection = DROPDOWN_DIRECTION.DEFAULT,
-  extendableBadgeContainer = false,
-  flatListProps = {},
-  hideSelectedItemIcon = false,
+  badgeDotStyle = {},
   iconContainerStyle = {},
-  itemKey = null,
-  itemLabelProps = {},
-  itemProps = {},
-  itemSeparator = false,
-  itemSeparatorStyle = {},
-  labelProps = {},
-  labelStyle = {},
-  language = LANGUAGE.DEFAULT,
-  listChildContainerStyle = {},
-  listChildLabelStyle = {},
-  ListEmptyComponent = null,
+  searchContainerStyle = {},
+  searchTextInputStyle = {},
+  searchPlaceholderTextColor = Colors.GREY,
+  dropDownContainerStyle = {},
+  modalContentContainerStyle = {},
+  modalAnimationType = 'none',
+  arrowIconContainerStyle = {},
+  closeIconContainerStyle = {},
+  tickIconContainerStyle = {},
   listItemContainerStyle = {},
   listItemLabelStyle = {},
-  listMessageContainerStyle = {},
-  listMessageTextStyle = {},
-  listMode = LIST_MODE.DEFAULT,
+  listChildContainerStyle = {},
+  listChildLabelStyle = {},
   listParentContainerStyle = {},
   listParentLabelStyle = {},
-  loading = false,
-  max = null,
-  maxHeight = 200,
-  min = null,
-  modalAnimationType = 'none',
-  modalContentContainerStyle = {},
-  modalProps = {},
-  modalTitle,
-  modalTitleStyle = {},
-  mode = MODE.DEFAULT,
-  multiple = false,
-  multipleText = null,
-  onChangeSearchText = (text) => {},
-  onChangeValue = (value) => {},
-  onClose = () => {},
-  onDirectionChanged = (direction) => {},
-  onLayout = (e) => {},
-  onOpen = () => {},
-  onPress = (open) => {},
-  onSelectItem = (item) => {},
-  placeholder = null,
-  placeholderStyle = {},
-  props = {},
-  renderBadgeItem = null,
-  renderListItem = null,
-  rtl = false,
-  schema = {},
-  scrollViewProps = {},
-  searchable = false,
-  searchContainerStyle = {},
-  searchPlaceholder = null,
-  searchPlaceholderTextColor = Colors.GREY,
-  searchTextInputProps = {},
-  searchTextInputStyle = {},
-  searchWithRegionalAccents = false,
   selectedItemContainerStyle = {},
   selectedItemLabelStyle = {},
+  disabledItemContainerStyle = {},
+  disabledItemLabelStyle = {},
+  customItemContainerStyle = {},
+  customItemLabelStyle = {},
+  listMessageContainerStyle = {},
+  listMessageTextStyle = {},
+  itemSeparatorStyle = {},
+  badgeSeparatorStyle = {},
+  modalTitleStyle = {},
+  listMode = LIST_MODE.DEFAULT,
+  categorySelectable = true,
+  searchable = false,
+  searchWithRegionalAccents = false,
+  searchPlaceholder = null,
+  modalTitle,
+  schema = {},
+  language = LANGUAGE.DEFAULT,
+  translation = {},
+  multiple = false,
+  multipleText = null,
+  mode = MODE.DEFAULT,
+  itemKey = null,
+  maxHeight = 200,
+  renderBadgeItem = null,
+  renderListItem = null,
+  itemSeparator = false,
+  bottomOffset = 0,
+  badgeColors = BADGE_COLORS,
+  badgeDotColors = BADGE_DOT_COLORS,
   showArrowIcon = true,
   showBadgeDot = true,
   showTickIcon = true,
   stickyHeader = false,
-  style = {},
-  testID,
-  textStyle = {},
-  theme = THEMES.DEFAULT,
+  autoScroll = false,
+  ArrowUpIconComponent = null,
+  ArrowDownIconComponent = null,
   TickIconComponent = null,
-  tickIconContainerStyle = {},
-  tickIconStyle = {},
-  translation = {},
+  CloseIconComponent = null,
+  ListEmptyComponent = null,
+  ActivityIndicatorComponent = null,
+  activityIndicatorSize = 30,
+  activityIndicatorColor = Colors.GREY,
+  props = {},
+  itemProps = {},
+  itemLabelProps = {},
+  badgeProps= {},
+  modalProps = {},
+  flatListProps = {},
+  scrollViewProps = {},
+  searchTextInputProps = {},
+  loading = false,
+  min = null,
+  max = null,
+  addCustomItem = false,
+  setOpen = () => {},
+  setItems = () => {},
+  disableBorderRadius = true,
+  containerProps = {},
+  onLayout = (e) => {},
+  onPress = (open) => {},
+  onOpen = () => {},
+  onClose = () => {},
+  setValue = (callback) => {},
+  onChangeValue = (value) => {},
+  onChangeSearchText = (text) => {},
+  onDirectionChanged = (direction) => {},
   zIndex = 5000,
   zIndexInverse = 6000,
+  rtl = false,
+  dropDownDirection = DROPDOWN_DIRECTION.DEFAULT,
+  disableLocalSearch = false,
+  theme = THEMES.DEFAULT,
+  testID,
+  closeOnBackPressed = false,
+  extendableBadgeContainer = false,
+  onSelectItem = (item) => {}
 }) {
   const [necessaryItems, setNecessaryItems] = useState([]);
   const [searchText, setSearchText] = useState('');
   const [pickerHeight, setPickerHeight] = useState(0);
-  const [direction, setDirection] = useState(
-    GET_DROPDOWN_DIRECTION(dropDownDirection),
-  );
+  const [direction, setDirection] = useState(GET_DROPDOWN_DIRECTION(dropDownDirection));
 
   const badgeFlatListRef = useRef();
   const pickerRef = useRef(null);
@@ -179,205 +184,234 @@ function Picker({
   const flatListRef = useRef();
   const scrollViewRef = useRef();
   const memoryRef = useRef({
-    items: [],
-    value: null,
+      value: null,
+      items: []
   });
 
   const THEME = useMemo(() => THEMES[theme].default, [theme]);
-  const ICON = useMemo(() => THEMES[theme].ICONS, [theme]);
+  const ICON = useMemo(() => THEMES[theme].ICONS, [theme])
 
   /**
    * The item schema.
    * @returns {object}
    */
-  const ITEM_SCHEMA = useMemo(() => ({ ...SCHEMA, ...schema }), [schema]);
+   const _schema = useMemo(() => ({...SCHEMA, ...schema}), [schema]);
 
   /**
    * componentDidMount.
    */
   useEffect(() => {
-    if (multiple) {
-      memoryRef.current.value = Array.isArray(value) ? value : [];
-    } else memoryRef.current.value = value;
+      memoryRef.current.value = multiple ? (Array.isArray(value) ? value : []) : value;
 
-    // Get initial selected items
-    let initialSelectedItems = [];
-    const valueNotNull =
-      value !== null && Array.isArray(value) && value.length !== 0;
+      // Get initial seleted items
+      let initialSelectedItems = [];
+      const valueNotNull = value !== null && (Array.isArray(value) && value.length !== 0);
 
-    if (valueNotNull) {
-      if (multiple) {
-        initialSelectedItems = items.filter((item) =>
-          value.includes(item[ITEM_SCHEMA.value]),
-        );
-      } else {
-        initialSelectedItems = items.find(
-          (item) => item[ITEM_SCHEMA.value] === value,
-        );
+      if (valueNotNull) {
+          if (multiple) {
+              initialSelectedItems = items.filter(item => value.includes(item[_schema.value]));
+          } else {
+              initialSelectedItems = items.find(item => item[_schema.value] === value);
+          }
       }
-    }
 
-    setNecessaryItems(initialSelectedItems);
+      setNecessaryItems(initialSelectedItems);
   }, []);
 
   useEffect(() => {
-    if (closeOnBackPressed && open) {
-      const backAction = () => {
-        setOpen(false);
+      if (closeOnBackPressed && open) {
+          const backAction = () => {
+              setOpen(false);
 
-        return true;
-      };
-      const backHandler = BackHandler.addEventListener(
-        'hardwareBackPress',
-        backAction,
-      );
+              return true;
+          };
+          const backHandler = BackHandler.addEventListener(
+              "hardwareBackPress",
+              backAction
+          );
 
-      return () => backHandler.remove();
-    }
+          return () => backHandler.remove();
+      }
   }, [open]);
 
   /**
    * Update necessary items.
    */
   useEffect(() => {
-    setNecessaryItems((state) =>
-      [...state].map((item) => {
-        const _item = items.find(
-          (x) => x[ITEM_SCHEMA.value] === item[ITEM_SCHEMA.value],
-        );
-
-        if (_item) {
-          return { ...item, ..._item };
-        }
-
-        return item;
-      }),
-    );
+      setNecessaryItems(state => {
+          return [...state].map(item => {
+              const _item = items.find(x => x[_schema.value] === item[_schema.value]);
+              
+              if (_item) {
+                  return {...item, ..._item};
+              }
+              
+              return item;
+          });
+      });
   }, [items]);
 
   /**
    * Sync necessary items.
    */
   useEffect(() => {
-    if (multiple) {
-      setNecessaryItems((state) => {
-        if (value === null || (Array.isArray(value) && value.length === 0))
-          return [];
+      if (multiple) {
+          setNecessaryItems(state => {
+              if (value === null || (Array.isArray(value) && value.length === 0))
+                  return [];
+              
+              let _state = [...state].filter(item => value.includes(item[_schema.value]));
 
-        const newState = [...state].filter((item) =>
-          value.includes(item[ITEM_SCHEMA.value]),
-        );
+              const newItems = value.reduce((accumulator, currentValue) => {
+                  const index = _state.findIndex(item => item[_schema.value] === currentValue);
 
-        const newItems = value.reduce((accumulator, currentValue) => {
-          const itemIndex = newState.findIndex(
-            (item) => item[ITEM_SCHEMA.value] === currentValue,
-          );
+                  if (index === -1) {
+                      const item = items.find(item => item[_schema.value] === currentValue);
+                  
+                      if (item) {
+                          return [...accumulator, item];
+                      }
 
-          if (itemIndex === -1) {
-            const item = items.find(
-              (item) => item[ITEM_SCHEMA.value] === currentValue,
-            );
+                      return accumulator;
+                  }
 
-            if (item) {
-              return [...accumulator, item];
-            }
+                  return accumulator;
+              }, []);
 
-            return accumulator;
+              return [..._state, ...newItems];
+          });
+      } else {
+          let state = [];
+
+          if (value !== null) {
+              const item = items.find(item => item[_schema.value] === value);
+
+              if (item) {
+                  state.push(item);
+              }
           }
-
-          return accumulator;
-        }, []);
-
-        return [...newState, ...newItems];
-      });
-    } else {
-      const state = [];
-
-      if (value !== null) {
-        const item = items.find((item) => item[ITEM_SCHEMA.value] === value);
-
-        if (item) {
-          state.push(item);
-        }
+          
+          setNecessaryItems(state);
       }
 
-      setNecessaryItems(state);
-    }
-
-    if (initializationRef.current) {
-      onChangeValue(value);
-    } else {
-      initializationRef.current = true;
-    }
+      if (initializationRef.current) {
+          onChangeValue(value);
+      } else {
+          initializationRef.current = true;
+      }
   }, [value, items]);
 
   /**
    * Update value in the memory.
    */
   useEffect(() => {
-    memoryRef.current.value = value;
+      memoryRef.current.value = value;
   }, [value]);
 
   /**
    * Update items in the memory.
    */
-  useEffect(() => {
-    memoryRef.current.items = necessaryItems;
+   useEffect(() => {
+      memoryRef.current.items = necessaryItems;
   }, [necessaryItems]);
 
   /**
    * Automatically scroll to the first selected item.
    */
   useEffect(() => {
-    if (open && autoScroll) {
-      scroll();
-    }
+      if (open && autoScroll) {
+          scroll();
+      }
   }, [open]);
 
   /**
    * dropDownDirection changed.
    */
   useEffect(() => {
-    setDirection(GET_DROPDOWN_DIRECTION(dropDownDirection));
+      setDirection(GET_DROPDOWN_DIRECTION(dropDownDirection));
   }, [dropDownDirection]);
 
   /**
    * mode changed.
    */
   useEffect(() => {
-    if (mode === MODE.SIMPLE) badgeFlatListRef.current = null;
+      if (mode === MODE.SIMPLE)
+          badgeFlatListRef.current = null;
   }, [mode]);
+
+
+// Filter Chips
+
+  const handleFilterChips=()=>{
+    
+      const line=filters.filter(i=>i.toLowerCase().includes("line"))
+      const dome=filters.filter(i=>i.toLowerCase().includes("dome"))
+      const position=filters.filter(i=>i.toLowerCase().includes("position"))
+    
+      if(searchText.toLocaleLowerCase().includes('dome')&&dome.length>0){
+          setFilters([...line,...position,searchText])
+          setSearchText('')
+          return
+      }
+      if(searchText.toLocaleLowerCase().includes('line') &&line.length>0){
+          setFilters([...dome,...position,searchText])
+          setSearchText('')
+          return
+      }
+      if(searchText.toLocaleLowerCase().includes('position') &&position.length>0){
+          setFilters([...dome,...line,searchText])
+          setSearchText('')
+          return
+      }
+      setFilters([...filters,searchText])
+      setSearchText('')
+  }
+
+
+  const deleteChip=(data)=>{
+      const res= filters.filter(i=>i!=data)
+      setFilters([...res])
+  }
+
+  useEffect(()=>{
+      setFilters([])
+  },[open])
+ 
+
+
 
   /**
    * onPressClose.
    */
   const onPressClose = useCallback(() => {
-    setOpen(false);
-    setSearchText('');
-    onClose();
+      setOpen(false);
+      setSearchText('');
+      onClose();
   }, [setOpen, onClose]);
 
   /**
    * onPressClose.
    */
   const onPressOpen = useCallback(() => {
-    setOpen(true);
-    onOpen();
+      setOpen(true);
+      onOpen();
   }, [setOpen, onOpen]);
 
   /**
    * onPressToggle.
    */
   const onPressToggle = useCallback(() => {
-    const isOpen = !open;
+      const isOpen = ! open;
 
-    setOpen(isOpen);
-    setSearchText('');
+      setOpen(isOpen);
+      setSearchText('');
 
-    if (isOpen) onOpen();
-    else onClose();
+      if (isOpen)
+          onOpen();
+      else
+          onClose();
 
-    return isOpen;
+      return isOpen;
   }, [open, setOpen, onOpen, onClose]);
 
   /**
@@ -385,180 +419,143 @@ function Picker({
    * @returns {object}
    */
   const sortedItems = useMemo(() => {
-    const sortedItems = items.filter(
-      (item) =>
-        item[ITEM_SCHEMA.parent] === undefined ||
-        item[ITEM_SCHEMA.parent] === null,
-    );
-    const children = items.filter(
-      (item) =>
-        item[ITEM_SCHEMA.parent] !== undefined &&
-        item[ITEM_SCHEMA.parent] !== null,
-    );
+      const sortedItems = items.filter(item => item[_schema.parent] === undefined || item[_schema.parent] === null);
+      const children = items.filter(item => item[_schema.parent] !== undefined && item[_schema.parent] !== null);
 
-    children.forEach((child) => {
-      const index = sortedItems.findIndex(
-        (item) =>
-          item[ITEM_SCHEMA.parent] === child[ITEM_SCHEMA.parent] ||
-          item[ITEM_SCHEMA.value] === child[ITEM_SCHEMA.parent],
-      );
+      children.forEach((child) => {
+          const index = sortedItems.findIndex(item => item[_schema.parent] === child[_schema.parent] || item[_schema.value] === child[_schema.parent]);
 
-      if (index > -1) {
-        sortedItems.splice(index + 1, 0, child);
-      }
-    });
+          if (index > -1) {
+              sortedItems.splice(index + 1, 0, child);
+          }
+      });
 
-    return sortedItems;
-  }, [items, ITEM_SCHEMA]);
+      return sortedItems;
+  }, [items, _schema]);
 
   /**
-   * Scroll to the first selected item.
+   * Scroll the the first selected item.
    */
   const scroll = useCallback(() => {
-    setTimeout(() => {
-      if (scrollViewRef.current || flatListRef.current) {
-        const isArray = Array.isArray(memoryRef.current.value);
+      setTimeout(() => {
+          if ((scrollViewRef.current || flatListRef.current)) {
+              const isArray = Array.isArray(memoryRef.current.value);
 
-        if (
-          memoryRef.current.value === null ||
-          (isArray && memoryRef.current.value.length === 0)
-        )
-          return;
+              if (memoryRef.current.value === null || (isArray && memoryRef.current.value.length === 0))
+                  return;
 
-        const value = isArray
-          ? memoryRef.current.value[0]
-          : memoryRef.current.value;
+              const value = isArray ? memoryRef.current.value[0] : memoryRef.current.value;
 
-        if (
-          scrollViewRef.current &&
-          itemPositionsRef.current.hasOwnProperty(value)
-        ) {
-          scrollViewRef.current?.scrollTo?.({
-            x: 0,
-            y: itemPositionsRef.current[value],
-            animated: true,
-          });
-        } else {
-          const index = sortedItems.findIndex(
-            (item) => item[ITEM_SCHEMA.value] === value,
-          );
-
-          if (index > -1)
-            flatListRef.current?.scrollToIndex?.({
-              index,
-              animated: true,
-            });
-        }
-      }
-    }, 200);
+              if (scrollViewRef.current && itemPositionsRef.current.hasOwnProperty(value)) {
+                  scrollViewRef.current?.scrollTo?.({
+                      x: 0,
+                      y: itemPositionsRef.current[value],
+                      animated: true,
+                  });
+              } else {
+                  const index = sortedItems.findIndex(item => item[_schema["value"]] === value);
+                  
+                  if (index > -1)
+                      flatListRef.current?.scrollToIndex?.({
+                          index,
+                          animated: true,
+                      });
+              }
+          }
+      }, 200);
   }, [sortedItems]);
 
   /**
    * onScrollToIndexFailed.
    */
-  const onScrollToIndexFailed = useCallback(({ averageItemLength, index }) => {
-    flatListRef.current.scrollToOffset?.({
-      offset: averageItemLength * index,
-      animated: true,
-    });
+   const onScrollToIndexFailed = useCallback(({averageItemLength, index}) => {
+      flatListRef.current.scrollToOffset?.({
+          offset: averageItemLength * index,
+          animated: true
+      });
   }, []);
 
   /**
    * The indices of all parent items.
    * @returns {object}
    */
-  const stickyHeaderIndices = useMemo(() => {
-    const stickyHeaderIndices = [];
-    if (stickyHeader) {
-      const parents = sortedItems.filter(
-        (item) =>
-          item[ITEM_SCHEMA.parent] === undefined ||
-          item[ITEM_SCHEMA.parent] === null,
-      );
-      parents.forEach((parent) => {
-        const index = sortedItems.findIndex(
-          (item) => item[ITEM_SCHEMA.value] === parent[ITEM_SCHEMA.value],
-        );
-        if (index > -1) stickyHeaderIndices.push(index);
-      });
-    }
-    return stickyHeaderIndices;
-  }, [stickyHeader, sortedItems]);
+   const stickyHeaderIndices = useMemo(() => {
+      const stickyHeaderIndices = [];
+      if (stickyHeader) {
+          const parents = sortedItems.filter(item => item[_schema.parent] === undefined || item[_schema.parent] === null);
+          parents.forEach((parent) => {
+              const index = sortedItems.findIndex(item => item[_schema.value] === parent[_schema.value]);
+              if (index > -1) stickyHeaderIndices.push(index);
+          })
+
+      }
+      return stickyHeaderIndices;
+
+  }, [stickyHeader, sortedItems])
 
   /**
    * The items.
    * @returns {object}
    */
   const _items = useMemo(() => {
-    if (searchText.length === 0) {
-      return sortedItems;
-    }
-    if (disableLocalSearch) return sortedItems;
+      if (searchText?.length === 0) {
+          return sortedItems;
+      } else {
+          if (disableLocalSearch)
+              return sortedItems;
+  
+          const values = [];
+          const normalizeText = (text) => text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-    const values = [];
-    const normalizeText = (text) =>
-      text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          let results = sortedItems.filter(item => {
+              const label = String(item[_schema.label]).toLowerCase();
 
-    const results = sortedItems.filter((item) => {
-      const label = String(item[ITEM_SCHEMA.label]).toLowerCase();
+              if (
+                  label.includes(searchText.toLowerCase())
+                  || searchWithRegionalAccents && normalizeText(label).includes(searchText.toLowerCase())
+              ) {
+                  values.push(item[_schema.value]);
+                  return true;
+              }
 
-      if (
-        label.includes(searchText.toLowerCase()) ||
-        (searchWithRegionalAccents &&
-          normalizeText(label).includes(searchText.toLowerCase()))
-      ) {
-        values.push(item[ITEM_SCHEMA.value]);
-        return true;
+              return false;
+          });
+
+          results.forEach((item, index) => {
+              if (item[_schema.parent] === undefined || item[_schema.parent] === null || values.includes(item[_schema.parent]))
+                  return;
+
+              const parent = sortedItems.find(x => x[_schema.value] === item[_schema.parent]);
+              values.push(item[_schema.parent]);
+
+              results.splice(index, 0, parent);
+          });
+
+          if ((results.length === 0 || results.findIndex(item => String(item[_schema.label]).toLowerCase() === searchText.toLowerCase()) === -1) && addCustomItem) {
+              results.push({
+                  [_schema.label]: searchText,
+                  [_schema.value]: searchText.replace(' ', '-'),
+                  custom: true
+              });
+          }
+
+          return results;
       }
-
-      return false;
-    });
-
-    results.forEach((item, index) => {
-      if (
-        item[ITEM_SCHEMA.parent] === undefined ||
-        item[ITEM_SCHEMA.parent] === null ||
-        values.includes(item[ITEM_SCHEMA.parent])
-      )
-        return;
-
-      const parent = sortedItems.find(
-        (x) => x[ITEM_SCHEMA.value] === item[ITEM_SCHEMA.parent],
-      );
-      values.push(item[ITEM_SCHEMA.parent]);
-
-      results.splice(index, 0, parent);
-    });
-
-    if (
-      (results.length === 0 ||
-        results.findIndex(
-          (item) =>
-            String(item[ITEM_SCHEMA.label]).toLowerCase() ===
-            searchText.toLowerCase(),
-        ) === -1) &&
-      addCustomItem
-    ) {
-      results.push({
-        [ITEM_SCHEMA.label]: searchText,
-        [ITEM_SCHEMA.value]: searchText.replace(' ', '-'),
-        custom: true,
-      });
-    }
-
-    return results;
-  }, [sortedItems, ITEM_SCHEMA, searchText, addCustomItem]);
+  }, [sortedItems, _schema, searchText, addCustomItem]);
 
   /**
    * The value.
    * @returns {string|object|null}}
    */
   const _value = useMemo(() => {
-    if (multiple) {
-      return value === null ? [] : [...new Set(value)];
-    }
+      if (multiple) {
+          if (value === null)
+              return [];
 
-    return value;
+          return [...new Set(value)];
+      }
+
+      return value;
   }, [value, multiple]);
 
   /**
@@ -566,86 +563,81 @@ function Picker({
    * @returns {object}
    */
   const selectedItems = useMemo(() => {
-    if (!multiple) return [];
+      if (! multiple)
+          return [];
 
-    return necessaryItems.filter((item) =>
-      _value.includes(item[ITEM_SCHEMA.value]),
-    );
-  }, [necessaryItems, _value, ITEM_SCHEMA, multiple]);
+      return necessaryItems.filter(item => _value.includes(item[_schema.value]));
+  }, [necessaryItems, _value, _schema, multiple]);
 
   /**
    * The language.
    * @returns {string}
    */
   const _language = useMemo(() => {
-    if (TRANSLATIONS.hasOwnProperty(language)) return language;
+      if (TRANSLATIONS.hasOwnProperty(language))
+          return language;
 
-    return LANGUAGE.FALLBACK;
+      return LANGUAGE.FALLBACK;
   }, [language]);
 
   /**
    * Get translation.
    */
-  const _ = useCallback(
-    (key) => GET_TRANSLATION(key, _language, translation),
-    [_language, translation],
-  );
+  const _ = useCallback((key) => {
+      return GET_TRANSLATION(key, _language, translation);
+  }, [_language, translation]);
 
   /**
    * The placeholder.
    * @returns {string}
    */
-  const _placeholder = useMemo(
-    () => placeholder ?? _('PLACEHOLDER'),
-    [placeholder, _],
-  );
+  const _placeholder = useMemo(() => placeholder ?? _('PLACEHOLDER'), [placeholder, _]);
 
   /**
    * The multiple text.
    * @returns {string}
    */
-  const _multipleText = useMemo(
-    () => multipleText ?? _('SELECTED_ITEMS_COUNT_TEXT'),
-    [multipleText, _],
-  );
+   const _multipleText = useMemo(() => multipleText ?? _('SELECTED_ITEMS_COUNT_TEXT'), [multipleText, _]);
 
   /**
    * The mode.
    * @returns {string}
    */
   const _mode = useMemo(() => {
-    try {
-      return mode;
-    } catch (e) {
-      return MODE.SIMPLE;
-    }
+      try {
+          return mode;
+      } catch (e) {
+          return MODE.SIMPLE;
+      }
   }, [mode]);
 
   /**
    * Indicates whether the value is null.
    * @returns {boolean}
    */
-  const isNull = useMemo(() => {
-    if (_value === null || (Array.isArray(_value) && _value.length === 0))
-      return true;
+   const isNull = useMemo(() => {
+      if (_value === null || (Array.isArray(_value) && _value.length === 0))
+          return true;
 
-    return necessaryItems.length === 0;
-  }, [necessaryItems, _value]);
+      return necessaryItems.length === 0;
+   }, [necessaryItems, _value]);
 
   /**
    * Get the selected item.
    * @returns {object}
    */
   const getSelectedItem = useCallback(() => {
-    if (multiple) return _value;
+      if (multiple)
+          return _value;
 
-    if (isNull) return null;
-
-    try {
-      return necessaryItems.find((item) => item[ITEM_SCHEMA.value] === _value);
-    } catch (e) {
-      return null;
-    }
+      if (isNull)
+          return null;
+      
+      try {
+          return necessaryItems.find(item => item[_schema.value] === _value);
+      } catch (e) {
+          return null;
+      }
   }, [_value, necessaryItems, isNull, multiple]);
 
   /**
@@ -653,375 +645,343 @@ function Picker({
    * @param {string|null} fallback
    * @returns {string}
    */
-  const getLabel = useCallback(
-    (fallback = null) => {
+  const getLabel = useCallback((fallback = null) => {
       const item = getSelectedItem();
 
       if (multiple)
-        if (item.length > 0) {
-          let mtext = _multipleText;
-
-          if (typeof mtext !== 'string') {
-            mtext = mtext[item.length] ?? mtext.n;
-          }
-
-          return mtext.replace('{count}', item.length);
-        } else return fallback;
+          if (item.length > 0) {
+              let mtext = _multipleText;
+              
+              if (typeof mtext !== 'string') {
+                  mtext = mtext[item.length] ?? mtext.n;
+              }
+              
+              return mtext.replace('{count}', item.length);
+          } else
+              return fallback;
 
       try {
-        return item[ITEM_SCHEMA.label];
+          return item[_schema.label];
       } catch (e) {
-        return fallback;
+          return fallback;
       }
-    },
-    [getSelectedItem, multiple, _multipleText, ITEM_SCHEMA],
-  );
+  }, [getSelectedItem, multiple, _multipleText, _schema]);
 
   /**
    * The label of the selected item / placeholder.
    */
-  const _selectedItemLabel = useMemo(
-    () => getLabel(_placeholder),
-    [getLabel, _placeholder],
-  );
+  const _selectedItemLabel = useMemo(() => getLabel(_placeholder), [getLabel, _placeholder]);
 
   /**
    * The icon of the selected item.
    */
   const _selectedItemIcon = useCallback(() => {
-    if (multiple) return null;
+      if (multiple)
+          return null;
 
-    const item = getSelectedItem();
+      const item = getSelectedItem();
 
-    try {
-      return item[ITEM_SCHEMA.icon] ?? null;
-    } catch (e) {
-      return null;
-    }
-  }, [getSelectedItem, multiple, ITEM_SCHEMA]);
+      try {
+          return item[_schema.icon] ?? null;
+      } catch (e) {
+          return null;
+      }
+  }, [getSelectedItem, multiple, _schema]);
+
 
   /**
    * onPress.
    */
   const __onPress = useCallback(async () => {
-    const isOpen = !open;
+      const isOpen = ! open;
 
-    onPress(isOpen);
+      onPress(isOpen);
 
-    if (isOpen && dropDownDirection === DROPDOWN_DIRECTION.AUTO) {
-      const [, y] = await new Promise((resolve) =>
-        pickerRef.current.measureInWindow((...args) => resolve(args)),
-      );
-      const size = y + maxHeight + pickerHeight + bottomOffset;
+      if (isOpen && dropDownDirection === DROPDOWN_DIRECTION.AUTO) {
+          const [, y] = await new Promise((resolve) =>
+              pickerRef.current.measureInWindow((...args) => resolve(args))
+          );
+          const size = y + maxHeight + pickerHeight + bottomOffset;
 
-      const direction = size < WINDOW_HEIGHT ? 'top' : 'bottom';
+          const direction = size < WINDOW_HEIGHT ? 'top' : 'bottom';
 
-      onDirectionChanged(direction);
-      setDirection(direction);
-    }
+          onDirectionChanged(direction);
+          setDirection(direction);
+      }
 
-    onPressToggle();
+      onPressToggle();
   }, [
-    open,
-    onPressToggle,
-    onPress,
-    onDirectionChanged,
-    maxHeight,
-    pickerHeight,
-    bottomOffset,
-    dropDownDirection,
+      open,
+      onPressToggle,
+      onPress,
+      onDirectionChanged,
+      maxHeight,
+      pickerHeight,
+      bottomOffset,
+      dropDownDirection
   ]);
 
   /**
    * onLayout.
    */
-  const __onLayout = useCallback(
-    (e) => {
-      if (Platform.OS !== 'web') e.persist();
+  const __onLayout = useCallback((e) => {
+      if(Platform.OS !== "web")
+          e.persist();
 
       onLayout(e);
 
       setPickerHeight(e.nativeEvent.layout.height);
-    },
-    [onLayout],
-  );
+  }, [onLayout]);
 
   /**
    * Disable borderRadius for the picker.
    * @returns {object}
    */
   const pickerNoBorderRadius = useMemo(() => {
-    if (listMode === LIST_MODE.MODAL) return null;
+      if (listMode === LIST_MODE.MODAL)
+          return null;
 
-    if (disableBorderRadius && open) {
-      return direction === 'top'
-        ? {
-            borderBottomLeftRadius: 0,
-            borderBottomRightRadius: 0,
-          }
-        : {
-            borderTopLeftRadius: 0,
-            borderTopRightRadius: 0,
+      if (disableBorderRadius && open) {
+          return direction === 'top' ? {
+              borderBottomLeftRadius: 0,
+              borderBottomRightRadius: 0,
+          } : {
+              borderTopLeftRadius: 0,
+              borderTopRightRadius: 0,
           };
-    }
+      }
 
-    return {};
+      return {};
   }, [disableBorderRadius, open, direction, listMode]);
 
   /**
    * Disable borderRadius for the drop down.
    * @returns {object}
    */
-  const dropDownNoBorderRadius = useMemo(() => {
-    if (listMode === LIST_MODE.MODAL) return null;
+   const dropDownNoBorderRadius = useMemo(() => {
+      if (listMode === LIST_MODE.MODAL)
+          return null;
 
-    if (disableBorderRadius && open) {
-      return direction === 'top'
-        ? {
-            borderTopLeftRadius: 0,
-            borderTopRightRadius: 0,
-          }
-        : {
-            borderBottomLeftRadius: 0,
-            borderBottomRightRadius: 0,
+      if (disableBorderRadius && open) {
+          return direction === 'top' ? {
+              borderTopLeftRadius: 0,
+              borderTopRightRadius: 0,
+          } : {
+              borderBottomLeftRadius: 0,
+              borderBottomRightRadius: 0,
           };
-    }
-  }, [disableBorderRadius, open, direction, listMode]);
+      }
+   }, [disableBorderRadius, open, direction, listMode]);
 
   /**
    * The disabled style.
    * @returns {object}
    */
-  const _disabledStyle = useMemo(
-    () => disabled && disabledStyle,
-    [disabled, disabledStyle],
-  );
+  const _disabledStyle = useMemo(() => disabled && disabledStyle, [disabled, disabledStyle]);
 
   /**
    * The zIndex.
    * @returns {number}
    */
   const _zIndex = useMemo(() => {
-    if (open) {
-      return direction === 'top' ? zIndex : zIndexInverse;
-    }
+      if (open) {
+          return direction === 'top' ? zIndex : zIndexInverse;
+      }
 
-    return zIndex;
+      return zIndex;
   }, [zIndex, zIndexInverse, direction, open]);
 
   /**
    * The style.
    * @returns {object}
    */
-  const _style = useMemo(
-    () => [
-      RTL_DIRECTION(rtl, THEME.style),
-      {
-        zIndex: _zIndex,
+  const _style = useMemo(() => ([
+      RTL_DIRECTION(rtl, THEME.style), {
+          zIndex: _zIndex
       },
       ...[style].flat(),
       ...[_disabledStyle].flat(),
-      pickerNoBorderRadius,
-    ],
-    [rtl, style, _disabledStyle, pickerNoBorderRadius, _zIndex, THEME],
-  );
+      pickerNoBorderRadius
+  ]), [rtl, style, _disabledStyle, pickerNoBorderRadius, _zIndex, THEME]);
 
   /**
    * The placeholder style.
    * @returns {object}
    */
-  const _placeholderStyle = useMemo(
-    () => isNull && placeholderStyle,
-    [isNull, placeholderStyle],
-  );
+  const _placeholderStyle = useMemo(() => {
+      return isNull && placeholderStyle;
+  }, [isNull, placeholderStyle]);
 
   /**
    * The style of the label.
    * @returns {object}
    */
-  const _labelStyle = useMemo(
-    () => [
+  const _labelStyle = useMemo(() => ([
       THEME.label,
       ...[textStyle].flat(),
-      ...[!isNull && labelStyle].flat(),
+      ...[! isNull && labelStyle].flat(),
       ...[_placeholderStyle].flat(),
-    ],
-    [textStyle, _placeholderStyle, labelStyle, isNull, THEME],
-  );
+  ]), [textStyle, _placeholderStyle, labelStyle, isNull, THEME]);
 
   /**
    * The arrow icon style.
    * @returns {object}
    */
-  const _arrowIconStyle = useMemo(
-    () => [THEME.arrowIcon, ...[arrowIconStyle].flat()],
-    [arrowIconStyle, THEME],
-  );
+  const _arrowIconStyle = useMemo(() => ([
+      THEME.arrowIcon,
+      ...[arrowIconStyle].flat()
+  ]), [arrowIconStyle, THEME]);
 
   /**
    * The dropdown container style.
    * @returns {object}
    */
-  const _dropDownContainerStyle = useMemo(
-    () => [
-      THEME.dropDownContainer,
-      {
-        [direction]: pickerHeight - 1,
-        maxHeight,
-        zIndex: _zIndex,
+  const _dropDownContainerStyle = useMemo(() => ([
+      THEME.dropDownContainer, {
+          [direction]: pickerHeight - 1,
+          maxHeight,
+          zIndex: _zIndex
       },
       ...[dropDownContainerStyle].flat(),
-      dropDownNoBorderRadius,
-    ],
-    [
-      direction,
+      dropDownNoBorderRadius
+  ]), [
       dropDownContainerStyle,
-      dropDownNoBorderRadius,
-      maxHeight,
       pickerHeight,
-      THEME,
+      maxHeight,
+      dropDownNoBorderRadius,
+      direction,
       _zIndex,
-    ],
-  );
+      THEME
+  ]);
 
   /**
    * The modal content container style.
    * @returns {object}
    */
-  const _modalContentContainerStyle = useMemo(
-    () => [THEME.modalContentContainer, ...[modalContentContainerStyle].flat()],
-    [modalContentContainerStyle, THEME],
-  );
+   const _modalContentContainerStyle = useMemo(() => ([
+      THEME.modalContentContainer,
+      ...[modalContentContainerStyle].flat()
+  ]), [modalContentContainerStyle, THEME]);
 
   /**
    * The zIndex of the container.
    * @returns {object}
    */
-  const zIndexContainer = useMemo(
-    () =>
-      Platform.OS !== 'android' && {
-        zIndex: _zIndex,
-      },
-    [_zIndex],
-  );
+  const zIndexContainer = useMemo(() => Platform.OS !== 'android' && {
+      zIndex: _zIndex
+  }, [_zIndex]);
 
   /**
    * The container style.
    * @returns {object}
    */
-  const _containerStyle = useMemo(
-    () => [THEME.container, zIndexContainer, ...[containerStyle].flat()],
-    [zIndexContainer, containerStyle, THEME],
-  );
+  const _containerStyle = useMemo(() => ([
+      THEME.container,
+      zIndexContainer,
+      ...[containerStyle].flat()
+  ]), [zIndexContainer, containerStyle, THEME]);
 
   /**
    * The arrow icon container style.
    * @returns {object}
    */
-  const _arrowIconContainerStyle = useMemo(
-    () => [
+  const _arrowIconContainerStyle = useMemo(() => ([
       RTL_STYLE(rtl, THEME.arrowIconContainer),
-      ...[arrowIconContainerStyle].flat(),
-    ],
-    [rtl, arrowIconContainerStyle, THEME],
-  );
+      ...[arrowIconContainerStyle].flat()
+  ]), [rtl, arrowIconContainerStyle, THEME]);
 
   /**
    * The arrow component.
    * @returns {JSX.Element}
    */
   const _ArrowComponent = useMemo(() => {
-    if (!showArrowIcon) return null;
+      if (! showArrowIcon)
+          return null;
 
-    let Component;
-    if (open && ArrowUpIconComponent !== null)
-      Component = <ArrowUpIconComponent style={_arrowIconStyle} />;
-    else if (!open && ArrowDownIconComponent !== null)
-      Component = <ArrowDownIconComponent style={_arrowIconStyle} />;
-    else
-      Component = (
-        <Image
-          source={open ? ICON.ARROW_UP : ICON.ARROW_DOWN}
-          style={_arrowIconStyle}
-        />
+      let Component;
+      if (open && ArrowUpIconComponent !== null)
+          Component = <ArrowUpIconComponent style={_arrowIconStyle} />;
+      else if (! open && ArrowDownIconComponent !== null)
+          Component = <ArrowDownIconComponent style={_arrowIconStyle} />;
+      else
+          Component = <Image source={open ? ICON.ARROW_UP : ICON.ARROW_DOWN} style={_arrowIconStyle} />;
+
+      return (
+          <View style={_arrowIconContainerStyle}>
+              {Component}
+          </View>
       );
-
-    return <View style={_arrowIconContainerStyle}>{Component}</View>;
   }, [
-    showArrowIcon,
-    open,
-    ArrowUpIconComponent,
-    ArrowDownIconComponent,
-    _arrowIconStyle,
-    _arrowIconContainerStyle,
-    ICON,
+      showArrowIcon,
+      open,
+      ArrowUpIconComponent,
+      ArrowDownIconComponent,
+      _arrowIconStyle,
+      _arrowIconContainerStyle,
+      ICON
   ]);
 
   /**
    * The icon container style.
    * @returns {object}
    */
-  const _iconContainerStyle = useMemo(
-    () => [RTL_STYLE(rtl, THEME.iconContainer), ...[iconContainerStyle].flat()],
-    [rtl, iconContainerStyle, THEME],
-  );
+   const _iconContainerStyle = useMemo(() => ([
+      RTL_STYLE(rtl, THEME.iconContainer),
+      ...[iconContainerStyle].flat()
+  ]), [rtl, iconContainerStyle, THEME]);
 
   /**
    * The selected item icon component.
    * @returns {JSX.Element|null}
    */
-  const SelectedItemIconComponent = useMemo(() => {
-    const Component = _selectedItemIcon();
+   const SelectedItemIconComponent = useMemo(() => {
+      const Component = _selectedItemIcon();
 
-    if (hideSelectedItemIcon) return null;
+      if (hideSelectedItemIcon)
+          return null;
 
-    return (
-      Component !== null && (
-        <View style={_iconContainerStyle}>
-          <Component />
-        </View>
-      )
-    );
-  }, [_selectedItemIcon, hideSelectedItemIcon, _iconContainerStyle]);
+      return Component !== null && (
+          <View style={_iconContainerStyle}>
+              <Component />
+          </View>
+      );
+   }, [_selectedItemIcon, hideSelectedItemIcon, _iconContainerStyle]);
 
   /**
    * The simple body component.
    * @returns {JSX.Element}
    */
-  const SimpleBodyComponent = useMemo(
-    () => (
+  const SimpleBodyComponent = useMemo(() => (
       <>
-        {SelectedItemIconComponent}
-        <Text style={_labelStyle} {...labelProps}>
-          {_selectedItemLabel}
-        </Text>
+          {SelectedItemIconComponent}
+          <Text style={_labelStyle} {...labelProps}>
+              {_selectedItemLabel}
+          </Text>
       </>
-    ),
-    [SelectedItemIconComponent, _labelStyle, labelProps, _selectedItemLabel],
-  );
+  ), [SelectedItemIconComponent, _labelStyle, labelProps, _selectedItemLabel]);
 
   /**
    * onPress badge.
    */
-  const onPressBadge = useCallback(
-    (badgeValue) => {
-      setValue((state) => {
-        const newState = [...state];
-        newState.filter((nsItem) => nsItem !== badgeValue);
-        return newState;
+  const onPressBadge = useCallback((value) => {
+      setValue(state => {
+          let _state = [...state];
+          const index = _state.findIndex(item => item === value);
+              _state.splice(index, 1);
+
+          return _state;
       });
-    },
-    [setValue],
-  );
+  }, [setValue]);
 
   /**
    * The badge colors.
    * @returns {object}
    */
   const _badgeColors = useMemo(() => {
-    if (typeof badgeColors === 'string') return [badgeColors];
+      if (typeof badgeColors === 'string')
+          return [badgeColors];
 
-    return badgeColors;
+      return badgeColors;
   }, [badgeColors]);
 
   /**
@@ -1029,9 +989,10 @@ function Picker({
    * @returns {object}
    */
   const _badgeDotColors = useMemo(() => {
-    if (typeof badgeDotColors === 'string') return [badgeDotColors];
+      if (typeof badgeDotColors === 'string')
+          return [badgeDotColors];
 
-    return badgeDotColors;
+      return badgeDotColors;
   }, [badgeDotColors]);
 
   /**
@@ -1039,89 +1000,80 @@ function Picker({
    * @param {string} str
    * @returns {string}
    */
-  const getBadgeColor = useCallback(
-    (str) => {
+   const getBadgeColor = useCallback((str) => {
       str = `${str}`;
 
       const index = Math.abs(ASCII_CODE(str)) % _badgeColors.length;
       return _badgeColors[index];
-    },
-    [_badgeColors],
-  );
+  }, [_badgeColors]);
 
   /**
    * Get badge dot color.
    * @param {string} str
    * @returns {string}
    */
-  const getBadgeDotColor = useCallback(
-    (str) => {
+   const getBadgeDotColor = useCallback((str) => {
       str = `${str}`;
 
       const index = Math.abs(ASCII_CODE(str)) % _badgeDotColors.length;
       return _badgeDotColors[index];
-    },
-    [_badgeDotColors],
-  );
+  }, [_badgeDotColors]);
 
   /**
    * The render badge component.
    * @returns {JSX.Element}
    */
-  const RenderBadgeComponent = useMemo(
-    () => (renderBadgeItem !== null ? renderBadgeItem : RenderBadgeItem),
-    [renderBadgeItem],
-  );
+  const RenderBadgeComponent = useMemo(() => {
+      return renderBadgeItem !== null ? renderBadgeItem : RenderBadgeItem;
+  }, [renderBadgeItem]);
 
   /**
    * Render badge.
    * @returns {JSX.Element}
    */
-  const __renderBadge = useCallback(
-    ({ item }) => (
+  const __renderBadge = useCallback(({item}) => (
       <RenderBadgeComponent
-        props={badgeProps}
-        rtl={rtl}
-        label={item[ITEM_SCHEMA.label]}
-        value={item[ITEM_SCHEMA.value]}
-        IconComponent={item[ITEM_SCHEMA.icon] ?? null}
-        textStyle={textStyle}
-        badgeStyle={badgeStyle}
-        badgeTextStyle={badgeTextStyle}
-        badgeDotStyle={badgeDotStyle}
-        getBadgeColor={getBadgeColor}
-        getBadgeDotColor={getBadgeDotColor}
-        showBadgeDot={showBadgeDot}
-        onPress={onPressBadge}
-        theme={theme}
-        THEME={THEME}
+          props={badgeProps}
+          rtl={rtl}
+          label={item[_schema.label]}
+          value={item[_schema.value]}
+          IconComponent={item[_schema.icon] ?? null}
+          textStyle={textStyle}
+          badgeStyle={badgeStyle}
+          badgeTextStyle={badgeTextStyle}
+          badgeDotStyle={badgeDotStyle}
+          getBadgeColor={getBadgeColor}
+          getBadgeDotColor={getBadgeDotColor}
+          showBadgeDot={showBadgeDot}
+          onPress={onPressBadge}
+          theme={theme}
+          THEME={THEME}
       />
-    ),
-    [
-      badgeDotStyle,
+  ), [
+      rtl,
+      _schema,
+      textStyle,
       badgeStyle,
       badgeTextStyle,
+      badgeDotStyle,
       getBadgeColor,
       getBadgeDotColor,
-      ITEM_SCHEMA,
-      onPressBadge,
-      rtl,
       showBadgeDot,
-      textStyle,
-      THEME,
+      onPressBadge,
       theme,
-    ],
-  );
+      THEME
+  ]);
 
   /**
    * The badge key.
    * @returns {string}
    */
   const _itemKey = useMemo(() => {
-    if (itemKey === null) return ITEM_SCHEMA.value;
-
-    return itemKey;
-  }, [itemKey, ITEM_SCHEMA]);
+      if (itemKey === null)
+          return _schema.value;
+      
+      return itemKey;
+  }, [itemKey, _schema]);
 
   /**
    * The key extractor.
@@ -1133,521 +1085,479 @@ function Picker({
    * The badge separator style.
    * @returns {object}
    */
-  const _badgeSeparatorStyle = useMemo(
-    () => [THEME.badgeSeparator, ...[badgeSeparatorStyle].flat()],
-    [badgeSeparatorStyle, THEME],
-  );
+  const _badgeSeparatorStyle = useMemo(() => ([
+      THEME.badgeSeparator,
+      ...[badgeSeparatorStyle].flat()
+  ]), [badgeSeparatorStyle, THEME]);
 
   /**
    * The badge separator component.
    * @returns {JSX.Element}
    */
-  const BadgeSeparatorComponent = useCallback(
-    () => <View style={_badgeSeparatorStyle} />,
-    [_badgeSeparatorStyle],
-  );
+  const BadgeSeparatorComponent = useCallback(() => (
+      <View style={_badgeSeparatorStyle} />
+  ), [_badgeSeparatorStyle]);
 
   /**
    * The label container style.
    * @returns {object}
    */
-  const labelContainerStyle = useMemo(
-    () => [
-      THEME.labelContainer,
-      rtl && {
-        transform: [{ scaleX: -1 }],
-      },
-    ],
-    [rtl, THEME],
-  );
+  const labelContainerStyle = useMemo(() => ([
+      THEME.labelContainer, rtl && {
+          transform: [
+              {scaleX: -1}
+          ]
+      }
+  ]), [rtl, THEME]);
 
   /**
    * Badge list empty component.
    * @returns {JSX.Element}
    */
-  const BadgeListEmptyComponent = useCallback(
-    () => (
+  const BadgeListEmptyComponent = useCallback(() => (
       <View style={labelContainerStyle}>
-        <Text style={_labelStyle} {...labelProps}>
-          {_placeholder}
-        </Text>
+          <Text style={_labelStyle} {...labelProps}>
+              {_placeholder}
+          </Text>
       </View>
-    ),
-    [_labelStyle, labelContainerStyle, labelProps, _placeholder],
-  );
+  ), [_labelStyle, labelContainerStyle, labelProps, _placeholder]);
 
   /**
    * Set ref.
    */
   const setBadgeFlatListRef = useCallback((ref) => {
-    badgeFlatListRef.current = ref;
+      badgeFlatListRef.current = ref;
   }, []);
 
   /**
    * The extendable badge container style.
    * @returns {object}
    */
-  const extendableBadgeContainerStyle = useMemo(
-    () => [RTL_DIRECTION(rtl, THEME.extendableBadgeContainer)],
-    [rtl, THEME],
-  );
+  const extendableBadgeContainerStyle = useMemo(() => ([
+      RTL_DIRECTION(rtl, THEME.extendableBadgeContainer)
+  ]), [rtl, THEME]);
 
   /**
    * The extendable badge item container style.
    * @returns {object}
    */
-  const extendableBadgeItemContainerStyle = useMemo(
-    () => [
-      THEME.extendableBadgeItemContainer,
-      rtl && {
-        marginEnd: 0,
-        marginStart: THEME.extendableBadgeItemContainer.marginEnd,
-      },
-    ],
-    [rtl, THEME],
-  );
+  const extendableBadgeItemContainerStyle = useMemo(() => ([
+      THEME.extendableBadgeItemContainer, rtl && {
+          marginEnd: 0,
+          marginStart: THEME.extendableBadgeItemContainer.marginEnd
+      }
+  ]), [rtl, THEME]);
 
   /**
    * Extendable badge container.
    * @returns {JSX.Element}
    */
-  const ExtendableBadgeContainer = useCallback(
-    ({ selectedItems }) => {
+  const ExtendableBadgeContainer = useCallback(({selectedItems}) => {
       if (selectedItems.length > 0) {
-        return (
-          <View style={extendableBadgeContainerStyle}>
-            {selectedItems.map((item, index) => (
-              <View key={index} style={extendableBadgeItemContainerStyle}>
-                <__renderBadge item={item} />
+          return (
+              <View style={extendableBadgeContainerStyle}>
+                  {selectedItems.map((item, index) => (
+                      <View key={index} style={extendableBadgeItemContainerStyle}>
+                          <__renderBadge item={item} />
+                      </View>
+                  ))}
               </View>
-            ))}
-          </View>
-        );
+          );
       }
-
+      
       return <BadgeListEmptyComponent />;
-    },
-    [
-      __renderBadge,
-      extendableBadgeContainerStyle,
-      extendableBadgeItemContainerStyle,
-    ],
-  );
+  }, [__renderBadge, extendableBadgeContainerStyle, extendableBadgeItemContainerStyle]);
 
   /**
    * The badge body component.
    * @returns {JSX.Element}
    */
-  const BadgeBodyComponent = useMemo(() => {
-    if (extendableBadgeContainer) {
-      return <ExtendableBadgeContainer selectedItems={selectedItems} />;
-    }
-
-    return (
-      <FlatList
-        ref={setBadgeFlatListRef}
-        data={selectedItems}
-        renderItem={__renderBadge}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        keyExtractor={keyExtractor}
-        ItemSeparatorComponent={BadgeSeparatorComponent}
-        ListEmptyComponent={BadgeListEmptyComponent}
-        style={THEME.listBody}
-        contentContainerStyle={THEME.listBodyContainer}
-        inverted={rtl}
-      />
-    );
+   const BadgeBodyComponent = useMemo(() => {
+      if (extendableBadgeContainer) { 
+          return <ExtendableBadgeContainer selectedItems={selectedItems} />
+      }
+      
+      return (
+          <FlatList
+              ref={setBadgeFlatListRef}
+              data={selectedItems}
+              renderItem={__renderBadge}
+              horizontal={true}
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={keyExtractor}
+              ItemSeparatorComponent={BadgeSeparatorComponent}
+              ListEmptyComponent={BadgeListEmptyComponent}
+              style={THEME.listBody}
+              contentContainerStyle={THEME.listBodyContainer}
+              inverted={rtl}
+          />
+      );
   }, [
-    rtl,
-    extendableBadgeContainer,
-    ExtendableBadgeContainer,
-    selectedItems,
-    __renderBadge,
-    keyExtractor,
-    BadgeSeparatorComponent,
-    BadgeListEmptyComponent,
-    THEME,
+      rtl,
+      extendableBadgeContainer,
+      ExtendableBadgeContainer,
+      selectedItems,
+      __renderBadge,
+      keyExtractor,
+      BadgeSeparatorComponent,
+      BadgeListEmptyComponent,
+      THEME
   ]);
 
   /**
    * The body component.
    */
   const _BodyComponent = useMemo(() => {
-    switch (_mode) {
-      case MODE.SIMPLE:
-        return SimpleBodyComponent;
-      case MODE.BADGE:
-        return multiple ? BadgeBodyComponent : SimpleBodyComponent;
-      default: //
-    }
+      switch (_mode) {
+          case MODE.SIMPLE: return SimpleBodyComponent;
+          case MODE.BADGE: return multiple ? BadgeBodyComponent : SimpleBodyComponent;
+          default: //
+      }
   }, [_mode, SimpleBodyComponent, BadgeBodyComponent, multiple]);
 
   /**
    * The list item container style.
    * @returns {object}
    */
-  const _listItemContainerStyle = useMemo(
-    () => [
+  const _listItemContainerStyle = useMemo(() => ([
       RTL_DIRECTION(rtl, THEME.listItemContainer),
       ...[listItemContainerStyle].flat(),
-      stickyHeader && { backgroundColor: THEME.style.backgroundColor },
-    ],
-    [rtl, listItemContainerStyle, THEME],
-  );
+      stickyHeader && {backgroundColor: THEME.style.backgroundColor},
+  ]), [rtl, listItemContainerStyle, THEME]);
 
   /**
    * The tick icon container style.
    * @returns {object}
    */
-  const _tickIconContainerStyle = useMemo(
-    () => [
+  const _tickIconContainerStyle = useMemo(() => ([
       RTL_STYLE(rtl, THEME.tickIconContainer),
-      ...[tickIconContainerStyle].flat(),
-    ],
-    [rtl, tickIconContainerStyle, THEME],
-  );
+      ...[tickIconContainerStyle].flat()
+  ]), [rtl, tickIconContainerStyle,THEME]);
 
   /**
    * The list item label style.
    * @returns {object}
    */
-  const _listItemLabelStyle = useMemo(
-    () => [
+  const _listItemLabelStyle = useMemo(() => ([
       THEME.listItemLabel,
       ...[textStyle].flat(),
-      ...[listItemLabelStyle].flat(),
-    ],
-    [textStyle, listItemLabelStyle, THEME],
-  );
+      ...[listItemLabelStyle].flat()
+  ]), [textStyle, listItemLabelStyle, THEME]);
 
   /**
    * The tick icon style.
    * @returns {object}
    */
-  const _tickIconStyle = useMemo(
-    () => [THEME.tickIcon, ...[tickIconStyle].flat()],
-    [tickIconStyle, THEME],
-  );
+  const _tickIconStyle = useMemo(() => ([
+      THEME.tickIcon,
+      ...[tickIconStyle].flat()
+  ]), [tickIconStyle, THEME]);
 
   /**
    * The search container style.
    * @returns {object}
    */
-  const _searchContainerStyle = useMemo(
-    () => [
+  const _searchContainerStyle = useMemo(() => ([
       RTL_DIRECTION(rtl, THEME.searchContainer),
-      ...[searchContainerStyle].flat(),
-      !searchable &&
-        !modalTitle &&
-        listMode === LIST_MODE.MODAL && {
-          flexDirection: 'row-reverse',
-        },
-    ],
-    [rtl, listMode, searchable, modalTitle, searchContainerStyle, THEME],
-  );
+      ...[searchContainerStyle].flat(), ! searchable && ! modalTitle && listMode === LIST_MODE.MODAL && {
+          flexDirection: 'row-reverse'
+      }
+  ]), [rtl, listMode, searchable, modalTitle, searchContainerStyle, THEME]);
 
   /**
    * The search text input style.
    * @returns {object}
    */
-  const _searchTextInputStyle = useMemo(
-    () => [textStyle, THEME.searchTextInput, ...[searchTextInputStyle].flat()],
-    [textStyle, searchTextInputStyle, THEME],
-  );
+  const _searchTextInputStyle = useMemo(() => ([
+      textStyle,
+      THEME.searchTextInput,
+      ...[searchTextInputStyle].flat()
+  ]), [textStyle, searchTextInputStyle, THEME]);
 
   /**
    * The close icon container style.
    * @returns {object}
    */
-  const _closeIconContainerStyle = useMemo(
-    () => [
+  const _closeIconContainerStyle = useMemo(() => ([
       RTL_STYLE(rtl, THEME.closeIconContainer),
-      ...[closeIconContainerStyle].flat(),
-    ],
-    [rtl, closeIconContainerStyle, THEME],
-  );
+      ...[closeIconContainerStyle].flat()
+  ]), [rtl, closeIconContainerStyle, THEME]);
 
   /**
    * The close icon style.
    * @returns {object}
    */
-  const _closeIconStyle = useMemo(
-    () => [THEME.closeIcon, ...[closeIconStyle].flat()],
-    [closeIconStyle, THEME],
-  );
+  const _closeIconStyle = useMemo(() => ([
+      THEME.closeIcon,
+      ...[closeIconStyle].flat()
+  ]), [closeIconStyle, THEME]);
 
   /**
    * The list message container style.
    * @returns {objects}
    */
-  const _listMessageContainerStyle = useMemo(
-    () => [THEME.listMessageContainer, ...[listMessageContainerStyle].flat()],
-    [listMessageContainerStyle, THEME],
-  );
+  const _listMessageContainerStyle = useMemo(() => ([
+      THEME.listMessageContainer,
+      ...[listMessageContainerStyle].flat()
+  ]), [listMessageContainerStyle, THEME]);
 
   /**
    * The list message text style.
    * @returns {object}
    */
-  const _listMessageTextStyle = useMemo(
-    () => [
+  const _listMessageTextStyle = useMemo(() => ([
       THEME.listMessageText,
       ...[textStyle].flat(),
-      ...[listMessageTextStyle].flat(),
-    ],
-    [listMessageTextStyle, THEME],
-  );
+      ...[listMessageTextStyle].flat()
+  ]), [listMessageTextStyle, THEME]);
 
   /**
    * onPress item.
    */
-  const onPressItem = useCallback(
-    (item, customItem = false) => {
-      // if pressed item was a custom item by the user, add it to the list of items (?)
+  const onPressItem = useCallback((item, customItem = false) => {
       if (customItem !== false) {
-        item.custom = false;
-        setItems((state) => [...state, item]);
+          item.custom = false;
+          setItems(state => [...state, item]);
       }
 
-      // call onSelectItem() callback for item/s now selected after item press.
       // Not a reliable method for external value changes.
       if (multiple) {
-        if (memoryRef.current.value?.includes(item[ITEM_SCHEMA.value])) {
-          const index = memoryRef.current.items.findIndex(
-            (x) => x[ITEM_SCHEMA.value] === item[ITEM_SCHEMA.value],
-          );
+          if (memoryRef.current.value?.includes(item[_schema.value])) {
+              const index = memoryRef.current.items.findIndex(x => x[_schema.value] === item[_schema.value]);
 
-          if (index > -1) {
-            memoryRef.current.items.splice(index, 1);
-            onSelectItem(memoryRef.current.items.slice());
+              if (index > -1) {
+                  memoryRef.current.items.splice(index, 1);
+                  onSelectItem(memoryRef.current.items.slice());
+              }
+          } else {
+              onSelectItem([...memoryRef.current.items, item]);
           }
-        } else {
-          onSelectItem([...memoryRef.current.items, item]);
-        }
       } else {
-        onSelectItem(item);
+          onSelectItem(item);
       }
 
-      setValue((state) => {
-        // call setValue() callback to change selected value/s after item press.
-        if (multiple) {
-          const newState =
-            state === null || state === undefined ? [] : [...state];
+      setValue(state => {
+          if (multiple) {
+              let _state = state !== null && state !== undefined  ? [...state] : [];
 
-          if (newState.includes(item[ITEM_SCHEMA.value])) {
-            // if value already included, remove it if doing so wouldn't go under min number
-            if (!Number.isInteger(min) || min < newState.length) {
-              newState.splice(newState.indexOf(item[ITEM_SCHEMA.value]), 1);
-            }
-          } else if (!Number.isInteger(max) || max > newState.length) {
-            // if value not already included, add it if doing so wouldn't go above max number
-            newState.push(item[ITEM_SCHEMA.value]);
+              if (_state.includes(item[_schema.value])) {
+                  // Remove the value
+                  if (Number.isInteger(min) && min >= _state.length) {
+                      return state;
+                  }
+
+                  const index = _state.findIndex(x => x === item[_schema.value]);
+                  _state.splice(index, 1);
+              } else {
+                  // Add the value
+                  if (Number.isInteger(max) && max <= _state.length) {
+                      return state;
+                  }
+
+                  _state.push(item[_schema.value]);
+              }
+
+              return _state;
+          } else {
+              return item[_schema.value];
           }
-
-          return newState;
-        }
-
-        return item[ITEM_SCHEMA.value]; // single-value picker
       });
 
-      // adjust necessary items after item press.
-      // if single-item picker, set necessary items with array whose only element is the item pressed.
-      // if multi-item picker, if item in necessary items remove it or if not then add it, within min/max constraints
-      setNecessaryItems((state) => {
-        if (multiple) {
-          const newState = [...state];
+      setNecessaryItems(state => {
+          if (multiple) {
+              const _state = [...state];
 
-          const itemIndex = newState.findIndex(
-            (x) => x[ITEM_SCHEMA.value] === item[ITEM_SCHEMA.value],
-          );
+              if (_state.findIndex(x => x[_schema.value] === item[_schema.value]) > -1) {
+                  // Remove the item
+                  if (Number.isInteger(min) && min >= _state.length) {
+                      return state;
+                  }
 
-          if (itemIndex > -1) {
-            // If pressed item already in necessary items, remove it if doing so doesn't go below min number of items
-            if (!Number.isInteger(min) || min < newState.length) {
-              newState.splice(itemIndex, 1);
-            }
-          } else if (!Number.isInteger(max) || max > newState.length) {
-            // If pressed item not already in necessary items, add it if doing so doesn't go above max number of items
-            newState.push(item);
+                  const index = _state.findIndex(x => x[_schema.value] === item[_schema.value]);
+                  _state.splice(index, 1);
+
+                  return _state;
+              } else {
+                  // Add the item
+                  if (Number.isInteger(max) && max <= _state.length) {
+                      return state;
+                  }
+
+                  _state.push(item);
+
+                  return _state;
+              }
+          } else {
+              return [item];
           }
-
-          return newState;
-        }
-        // if a single-item picker, set pressed item as array of only necessary item
-        return [item];
       });
 
-      // if picker is a single-item picker and to close after an item gets selected, close it since press selected item.
-      if (closeAfterSelecting && !multiple) onPressClose();
-    },
-    [
-      closeAfterSelecting,
-      ITEM_SCHEMA,
-      max,
-      min,
+      if (closeAfterSelecting && ! multiple)
+          onPressClose();
+  }, [
+      setValue,
       multiple,
+      min,
+      max,
       onPressClose,
       onSelectItem,
+      closeAfterSelecting,
+      multiple,
       setItems,
-      setValue,
-    ],
-  );
+      _schema
+  ]);
 
   /**
    * The tick icon component.
    * @returns {JSX.Element}
    */
   const _TickIconComponent = useCallback(() => {
-    if (!showTickIcon) return null;
+      if (! showTickIcon)
+          return null;
 
-    let Component;
-    if (TickIconComponent !== null)
-      Component = <TickIconComponent style={_tickIconStyle} />;
-    else Component = <Image source={ICON.TICK} style={_tickIconStyle} />;
+      let Component;
+      if (TickIconComponent !== null)
+          Component = <TickIconComponent style={_tickIconStyle} />;
+      else
+          Component = <Image source={ICON.TICK} style={_tickIconStyle} />;
 
-    return <View style={_tickIconContainerStyle}>{Component}</View>;
-  }, [
-    TickIconComponent,
-    _tickIconStyle,
-    _tickIconContainerStyle,
-    showTickIcon,
-    ICON,
-  ]);
+      return (
+          <View style={_tickIconContainerStyle}>
+              {Component}
+          </View>
+      );
+  }, [TickIconComponent, _tickIconStyle, _tickIconContainerStyle, showTickIcon, ICON]);
 
   /**
    * The renderItem component.
    * @returns {JSX.Element}
    */
-  const RenderItemComponent = useMemo(
-    () => (renderListItem !== null ? renderListItem : RenderListItem),
-    [renderListItem],
-  );
+  const RenderItemComponent = useMemo(() => {
+      return renderListItem !== null ? renderListItem : RenderListItem;
+  }, [renderListItem]);
 
   /**
    * The selected item container style.
    * @returns {object}
    */
-  const _selectedItemContainerStyle = useMemo(
-    () => [THEME.selectedItemContainer, selectedItemContainerStyle],
-    [THEME, selectedItemContainerStyle],
-  );
+  const _selectedItemContainerStyle = useMemo(() => ([
+      THEME.selectedItemContainer,
+      selectedItemContainerStyle
+  ]), [THEME, selectedItemContainerStyle]);
 
   /**
    * The selected item label style.
    * @returns {object}
    */
-  const _selectedItemLabelStyle = useMemo(
-    () => [THEME.selectedItemLabel, selectedItemLabelStyle],
-    [THEME, selectedItemLabelStyle],
-  );
+  const _selectedItemLabelStyle = useMemo(() => ([
+      THEME.selectedItemLabel,
+      selectedItemLabelStyle
+  ]), [THEME, selectedItemLabelStyle]);
 
   /**
    * The disabled item container style.
    * @returns {object}
    */
-  const _disabledItemContainerStyle = useMemo(
-    () => [THEME.disabledItemContainer, disabledItemContainerStyle],
-    [THEME, disabledItemContainerStyle],
-  );
+  const _disabledItemContainerStyle = useMemo(() => ([
+      THEME.disabledItemContainer,
+      disabledItemContainerStyle
+  ]), [THEME, disabledItemContainerStyle]);
 
   /**
    * The disabled item label style.
    * @returns {object}
    */
-  const _disabledItemLabelStyle = useMemo(
-    () => [THEME.disabledItemContainer, disabledItemLabelStyle],
-    [THEME, disabledItemLabelStyle],
-  );
+  const _disabledItemLabelStyle = useMemo(() => ([
+      THEME.disabledItemContainer,
+      disabledItemLabelStyle
+  ]), [THEME, disabledItemLabelStyle]);
 
   /**
    * Render list item.
    * @returns {JSX.Element}
    */
-  const __renderListItem = useCallback(
-    ({ item }) => {
-      let IconComponent = item[ITEM_SCHEMA.icon] ?? null;
+  const __renderListItem = useCallback(({item}) => {
+      let IconComponent = item[_schema.icon] ?? null;
 
       if (IconComponent) {
-        IconComponent = (
-          <View style={_iconContainerStyle}>
-            <IconComponent />
-          </View>
-        );
+          IconComponent = (
+              <View style={_iconContainerStyle}>
+                  <IconComponent />
+              </View>
+          );
       }
 
       let isSelected;
       if (multiple) {
-        isSelected = _value.includes(item[ITEM_SCHEMA.value]);
+          isSelected = _value.includes(item[_schema.value]);
       } else {
-        isSelected = _value === item[ITEM_SCHEMA.value];
+          isSelected = _value === item[_schema.value]
       }
 
       return (
-        <RenderItemComponent
-          rtl={rtl}
-          item={item}
-          label={item[ITEM_SCHEMA.label]}
-          value={item[ITEM_SCHEMA.value]}
-          parent={item?.[ITEM_SCHEMA.parent] ?? null}
-          selectable={item?.[ITEM_SCHEMA.selectable] ?? null}
-          disabled={item?.[ITEM_SCHEMA.disabled] ?? false}
-          custom={item.custom ?? false}
-          props={itemProps}
-          labelProps={itemLabelProps}
-          isSelected={isSelected}
-          IconComponent={IconComponent}
-          TickIconComponent={_TickIconComponent}
-          listItemContainerStyle={_listItemContainerStyle}
-          listItemLabelStyle={_listItemLabelStyle}
-          listChildContainerStyle={listChildContainerStyle}
-          listChildLabelStyle={listChildLabelStyle}
-          listParentContainerStyle={listParentContainerStyle}
-          listParentLabelStyle={listParentLabelStyle}
-          customItemContainerStyle={customItemContainerStyle}
-          customItemLabelStyle={customItemLabelStyle}
-          selectedItemContainerStyle={_selectedItemContainerStyle}
-          selectedItemLabelStyle={_selectedItemLabelStyle}
-          disabledItemContainerStyle={_disabledItemContainerStyle}
-          disabledItemLabelStyle={_disabledItemLabelStyle}
-          labelStyle={item?.[ITEM_SCHEMA.labelStyle] ?? {}}
-          containerStyle={item?.[ITEM_SCHEMA.containerStyle] ?? {}}
-          categorySelectable={categorySelectable}
-          onPress={onPressItem}
-          setPosition={setItemPosition}
-          theme={theme}
-          THEME={THEME}
-        />
+          <RenderItemComponent
+              rtl={rtl}
+              item={item}
+              label={item[_schema.label]}
+              value={item[_schema.value]}
+              parent={item?.[_schema.parent] ?? null}
+              selectable={item?.[_schema.selectable] ?? null}
+              disabled={item?.[_schema.disabled] ?? false}
+              custom={item.custom ?? false}
+              props={itemProps}
+              labelProps={itemLabelProps}
+              isSelected={isSelected}
+              IconComponent={IconComponent}
+              TickIconComponent={_TickIconComponent}
+              listItemContainerStyle={_listItemContainerStyle}
+              listItemLabelStyle={_listItemLabelStyle}
+              listChildContainerStyle={listChildContainerStyle}
+              listChildLabelStyle={listChildLabelStyle}
+              listParentContainerStyle={listParentContainerStyle}
+              listParentLabelStyle={listParentLabelStyle}
+              customItemContainerStyle={customItemContainerStyle}
+              customItemLabelStyle={customItemLabelStyle}
+              selectedItemContainerStyle={_selectedItemContainerStyle}
+              selectedItemLabelStyle={_selectedItemLabelStyle}
+              disabledItemContainerStyle={_disabledItemContainerStyle}
+              disabledItemLabelStyle={_disabledItemLabelStyle}
+              labelStyle={item?.[_schema.labelStyle] ?? {}}
+              containerStyle={item?.[_schema.containerStyle] ?? {}}
+              categorySelectable={categorySelectable}
+              onPress={onPressItem}
+              setPosition={setItemPosition}
+              theme={theme}
+              THEME={THEME}
+          />
       );
-    },
-    [
-      categorySelectable,
-      customItemContainerStyle,
-      customItemLabelStyle,
-      itemLabelProps,
-      itemProps,
-      ITEM_SCHEMA,
+  }, [
+      rtl,
+      RenderItemComponent,
+      _listItemLabelStyle,
+      _iconContainerStyle,
       listChildContainerStyle,
       listChildLabelStyle,
       listParentContainerStyle,
       listParentLabelStyle,
-      multiple,
-      onPressItem,
-      RenderItemComponent,
-      rtl,
-      theme,
-      THEME,
-      _disabledItemContainerStyle,
-      _disabledItemLabelStyle,
-      _iconContainerStyle,
       _listItemContainerStyle,
       _listItemLabelStyle,
+      customItemContainerStyle,
+      customItemLabelStyle,
       _selectedItemContainerStyle,
       _selectedItemLabelStyle,
+      _disabledItemContainerStyle,
+      _disabledItemLabelStyle,
       _TickIconComponent,
+      _schema,
       _value,
-    ],
-  );
+      multiple,
+      itemProps,
+      itemLabelProps,
+      categorySelectable,
+      onPressItem,
+      theme,
+      THEME
+  ]);
 
   /**
    * Set item position.
@@ -1655,8 +1565,8 @@ function Picker({
    * @param {number} y
    */
   const setItemPosition = useCallback((value, y) => {
-    if (autoScroll && listMode === LIST_MODE.SCROLLVIEW)
-      itemPositionsRef.current[value] = y;
+      if (autoScroll && listMode === LIST_MODE.SCROLLVIEW)
+          itemPositionsRef.current[value] = y;
   }, []);
 
   /**
@@ -1664,295 +1574,305 @@ function Picker({
    * @returns {JSX.Element|null}
    */
   const ItemSeparatorComponent = useCallback(() => {
-    if (!itemSeparator) return null;
+      if (! itemSeparator)
+          return null;
 
-    return (
-      <View style={[THEME.itemSeparator, ...[itemSeparatorStyle].flat()]} />
-    );
+      return (
+          <View style={[
+              THEME.itemSeparator,
+              ...[itemSeparatorStyle].flat()
+          ]} />
+      );
   }, [itemSeparator, itemSeparatorStyle, THEME]);
 
   /**
    * The search placeholder.
    * @returns {string}
    */
-  const _searchPlaceholder = useMemo(() => {
-    if (searchPlaceholder !== null) return searchPlaceholder;
+   const _searchPlaceholder = useMemo(() => {
+      if (searchPlaceholder !== null)
+          return searchPlaceholder;
 
-    return _('SEARCH_PLACEHOLDER');
+      return _('SEARCH_PLACEHOLDER');
   }, [searchPlaceholder, _]);
 
   /**
    * onChangeSearchText.
    * @param {string} text
    */
-  const _onChangeSearchText = useCallback(
-    (text) => {
+  const _onChangeSearchText = useCallback((text) => {
       setSearchText(text);
       onChangeSearchText(text);
-    },
-    [onChangeSearchText],
-  );
+  }, [onChangeSearchText]);
 
   /**
    * The close icon component.
    * @returns {JSX.Element}
    */
   const _CloseIconComponent = useMemo(() => {
-    if (listMode !== LIST_MODE.MODAL) return null;
+      if (listMode !== LIST_MODE.MODAL)
+          return null;
 
-    let Component;
+      let Component;
 
-    if (CloseIconComponent !== null)
-      Component = <CloseIconComponent style={_closeIconStyle} />;
-    else Component = <Image source={ICON.CLOSE} style={_closeIconStyle} />;
+      if (CloseIconComponent !== null)
+          Component = <CloseIconComponent style={_closeIconStyle} />;
+      else
+          Component = <Image source={ICON.CLOSE} style={_closeIconStyle} />;
 
-    return (
-      <TouchableOpacity style={_closeIconContainerStyle} onPress={onPressClose}>
-        {Component}
-      </TouchableOpacity>
-    );
-  }, [
-    listMode,
-    CloseIconComponent,
-    _closeIconStyle,
-    _closeIconContainerStyle,
-    onPressClose,
-    ICON,
-  ]);
+      return (
+          <TouchableOpacity style={_closeIconContainerStyle} onPress={onPressClose}>
+              {Component}
+          </TouchableOpacity>
+      );
+  }, [listMode, CloseIconComponent, _closeIconStyle, _closeIconContainerStyle, onPressClose, ICON]);
 
   /**
    * Indicates if the search component is visible.
    * @returns {boolean}
    */
   const isSearchComponentVisible = useMemo(() => {
-    if (listMode === LIST_MODE.MODAL) return true;
+      if (listMode === LIST_MODE.MODAL)
+          return true;
 
-    return searchable;
+      return searchable;
   }, [listMode, searchable]);
 
   /**
    * modalTitleStyle.
    * @returns {object}
    */
-  const _modalTitleStyle = useMemo(
-    () => [
+   const _modalTitleStyle = useMemo(() => ([
       THEME.modalTitle,
       ...[modalTitleStyle].flat(),
       ...[textStyle].flat(),
-    ],
-    [textStyle, modalTitleStyle, THEME],
-  );
+  ]), [textStyle, modalTitleStyle, THEME]);
 
   /**
    * The search component.
    * @returns {JSX.Element}
    */
-  const SearchComponent = useMemo(
-    () =>
-      isSearchComponentVisible && (
-        <View style={_searchContainerStyle}>
-          {searchable ? (
-            <TextInput
-              value={searchText}
-              onChangeText={_onChangeSearchText}
-              style={_searchTextInputStyle}
-              placeholder={_searchPlaceholder}
-              placeholderTextColor={searchPlaceholderTextColor}
-              {...searchTextInputProps}
-            />
-          ) : (
-            listMode === LIST_MODE.MODAL && (
-              <View style={styles.flex}>
-                <Text style={_modalTitleStyle}>{modalTitle}</Text>
-              </View>
-            )
-          )}
+
+
+  const SearchComponent = useMemo(() => isSearchComponentVisible && (
+      <View style={_searchContainerStyle}>
+          {
+              searchable ? (
+                  <View style={{flex:1}}>
+                  <TextInput
+                      value={searchText}
+                      onChangeText={_onChangeSearchText}
+                      style={_searchTextInputStyle}
+                      placeholder={_searchPlaceholder}
+                      placeholderTextColor={searchPlaceholderTextColor}
+                      {...searchTextInputProps}
+                      onSubmitEditing={()=>handleFilterChips()}
+                  />
+                      <View style={{flexDirection:'row',marginVertical:5,alignItems:"center",}}>  
+                          {filters?.length>0 && filters?.map(i => (
+                          <Chip style={{marginHorizontal:3}} onClose={()=>deleteChip(i)} >{i}</Chip>
+                          ))}
+                      </View>
+                  </View>
+              ) :
+               listMode === LIST_MODE.MODAL && (
+                  <View style={styles.flex}>
+                      <Text style={_modalTitleStyle}>
+                          {modalTitle}
+                      </Text>
+                  </View>
+              )
+          }
           {_CloseIconComponent}
-        </View>
-      ),
-    [
-      isSearchComponentVisible,
+      </View>
+  ), [
+      searchable,
       listMode,
       modalTitle,
-      searchable,
+      isSearchComponentVisible,
+      _onChangeSearchText,
+      _modalTitleStyle,
+      _searchContainerStyle,
+      _searchTextInputStyle,
+      _searchPlaceholder,
       searchPlaceholderTextColor,
       searchText,
-      searchTextInputProps,
-      _modalTitleStyle,
-      _onChangeSearchText,
-      _searchContainerStyle,
-      _searchPlaceholder,
-      _searchTextInputStyle,
-    ],
-  );
+      searchTextInputProps
+  ]);
 
   /**
    * The dropdown component wrapper.
    * @returns {JSX.Element}
    */
-  const DropDownComponentWrapper = useCallback(
-    (Component) => (
+  const DropDownComponentWrapper = useCallback((Component) => (
       <View style={_dropDownContainerStyle}>
-        {SearchComponent}
-        {Component}
+          {SearchComponent}
+          {Component}
       </View>
-    ),
-    [_dropDownContainerStyle, SearchComponent],
-  );
+  ), [_dropDownContainerStyle, SearchComponent]);
 
   /**
    * The ActivityIndicatorComponent.
    * @returns {JSX.Element}
    */
   const _ActivityIndicatorComponent = useCallback(() => {
-    let Component;
+      let Component;
 
-    if (ActivityIndicatorComponent !== null)
-      Component = ActivityIndicatorComponent;
-    else Component = ActivityIndicator;
+      if (ActivityIndicatorComponent !== null)
+          Component = ActivityIndicatorComponent;
+      else
+          Component = ActivityIndicator
 
-    return (
-      <Component size={activityIndicatorSize} color={activityIndicatorColor} />
-    );
-  }, [
-    ActivityIndicatorComponent,
-    activityIndicatorSize,
-    activityIndicatorColor,
-  ]);
+      return <Component size={activityIndicatorSize} color={activityIndicatorColor} />
+  }, [ActivityIndicatorComponent, activityIndicatorSize, activityIndicatorColor]);
 
   /**
    * The ListEmptyComponent.
    * @returns {JSX.Element}
    */
   const _ListEmptyComponent = useCallback(() => {
-    let Component;
-    const message = _('NOTHING_TO_SHOW');
+      let Component;
+      const message = _('NOTHING_TO_SHOW');
 
-    if (ListEmptyComponent !== null) Component = ListEmptyComponent;
-    else Component = ListEmpty;
+      if (ListEmptyComponent !== null)
+          Component = ListEmptyComponent;
+      else
+          Component = ListEmpty;
 
-    return (
-      <Component
-        listMessageContainerStyle={_listMessageContainerStyle}
-        listMessageTextStyle={_listMessageTextStyle}
-        ActivityIndicatorComponent={_ActivityIndicatorComponent}
-        loading={loading}
-        message={message}
-      />
-    );
+      return (
+          <Component
+              listMessageContainerStyle={_listMessageContainerStyle}
+              listMessageTextStyle={_listMessageTextStyle}
+              ActivityIndicatorComponent={_ActivityIndicatorComponent}
+              loading={loading}
+              message={message} />
+      );
   }, [
-    _,
-    _listMessageContainerStyle,
-    _listMessageTextStyle,
-    ListEmptyComponent,
-    _ActivityIndicatorComponent,
-    loading,
+      _,
+      _listMessageContainerStyle,
+      _listMessageTextStyle,
+      ListEmptyComponent,
+      _ActivityIndicatorComponent,
+      loading
   ]);
 
   /**
    * onRequestCloseModal.
    */
   const onRequestCloseModal = useCallback(() => {
-    setOpen(false);
+      setOpen(false);
   }, []);
-
+  
   /**
    * The dropdown flatlist component.
    * @returns {JSX.Element}
    */
-  const DropDownFlatListComponent = useMemo(
-    () => (
+  const DropDownFlatListComponent = useMemo(() => (
+
+   
       <FlatList
-        ref={flatListRef}
-        style={styles.flex}
-        contentContainerStyle={THEME.flatListContentContainer}
-        ListEmptyComponent={_ListEmptyComponent}
-        data={_items}
-        renderItem={__renderListItem}
-        keyExtractor={keyExtractor}
-        extraData={_value}
-        ItemSeparatorComponent={ItemSeparatorComponent}
-        stickyHeaderIndices={stickyHeaderIndices}
-        onScrollToIndexFailed={onScrollToIndexFailed}
-        {...flatListProps}
+          ref={flatListRef}
+          style={styles.flex}
+          contentContainerStyle={THEME.flatListContentContainer}
+          ListEmptyComponent={_ListEmptyComponent}
+          data={_items}
+          renderItem={__renderListItem}
+          key={keyExtractor}
+          // keyExtractor={keyExtractor}
+          extraData={_value}
+          ItemSeparatorComponent={ItemSeparatorComponent}
+          stickyHeaderIndices={stickyHeaderIndices}
+          onScrollToIndexFailed={onScrollToIndexFailed}
+          {...flatListProps}
       />
-    ),
-    [
-      flatListProps,
-      ItemSeparatorComponent,
-      keyExtractor,
-      THEME,
+  
+  ), [
       _items,
-      _ListEmptyComponent,
       _value,
       __renderListItem,
-    ],
-  );
+      keyExtractor,
+      ItemSeparatorComponent,
+      flatListProps,
+      _ListEmptyComponent,
+      THEME
+  ]);
 
+  const DropdownSelectedcomponent = useMemo(() => (
+      <>
+     {/* {value || value?.length>0? <Text style={{color:"black",alignSelf:"center",fontSize:16}}>Selected Values</Text>:null} */}
+      <View style={{marginHorizontal:7}}>
+ 
+      {typeof value=='object' && showSelected ? value?.map((i)=>
+      <View style={{flexDirection:"row",justifyContent:"space-between"}}>
+      <Text style={{color:"black",fontSize:15}}>{i?.first_name}{i?.last_name}</Text>
+      <Icon name={'check-circle'}  size={28} />
+      </View>
+      ):null}
+      </View>
+      </>
+  ), [
+      _items,
+      _value,
+      __renderListItem,
+      keyExtractor,
+      ItemSeparatorComponent,
+      flatListProps,
+      _ListEmptyComponent,
+      THEME
+  ]);
+
+  
   /**
    * The dropdown scrollview component.
    * @returns {JSX.Element}
    */
-  const DropDownScrollViewComponent = useMemo(
-    () => (
-      <ScrollView
-        ref={scrollViewRef}
-        nestedScrollEnabled
-        stickyHeaderIndices={stickyHeaderIndices}
-        {...scrollViewProps}>
-        {_items.map((item, index) => (
-          <Fragment key={item[_itemKey]}>
-            {index > 0 && ItemSeparatorComponent()}
-            {__renderListItem({ item })}
-          </Fragment>
-        ))}
-        {_items.length === 0 && _ListEmptyComponent()}
-      </ScrollView>
-    ),
-    [__renderListItem, _itemKey, scrollViewProps, _ListEmptyComponent],
-  );
+  const DropDownScrollViewComponent = useMemo(() => {
+      return (
+          <ScrollView ref={scrollViewRef} nestedScrollEnabled={true} stickyHeaderIndices={stickyHeaderIndices} {...scrollViewProps}>
+              {_items.map((item, index) => { 
+                  return (
+                      <Fragment key={item[_itemKey]}>
+                          {index > 0 && ItemSeparatorComponent()}
+                          {__renderListItem({item})}
+                      </Fragment>
+                  );
+              })}
+              {_items.length === 0 && _ListEmptyComponent()}
+          </ScrollView>
+      );
+  }, [__renderListItem, _itemKey, scrollViewProps, _ListEmptyComponent]);
 
   /**
    * The dropdown modal component.
    * @returns {JSX.Element}
    */
-  const DropDownModalComponent = useMemo(
-    () => (
-      <Modal
-        animationType={modalAnimationType}
-        visible={open}
-        presentationStyle='fullScreen'
-        onRequestClose={onRequestCloseModal}
-        {...modalProps}>
-        <SafeAreaView style={_modalContentContainerStyle}>
-          {SearchComponent}
-          {DropDownFlatListComponent}
-        </SafeAreaView>
+  const DropDownModalComponent = useMemo(() => (
+      <Modal animationType={modalAnimationType} visible={open} presentationStyle="fullScreen" onRequestClose={onRequestCloseModal} {...modalProps}>
+          <SafeAreaView style={_modalContentContainerStyle}>
+              {SearchComponent}
+              { DropdownSelectedcomponent}
+              {DropDownFlatListComponent}
+          </SafeAreaView>
       </Modal>
-    ),
-    [open, SearchComponent, _modalContentContainerStyle, modalProps],
-  );
+  ), [open, SearchComponent, _modalContentContainerStyle, modalProps]);
 
   /**
    * The dropdown component.
    * @returns {JSX.Element}
    */
   const DropDownComponent = useMemo(() => {
-    switch (listMode) {
-      case LIST_MODE.FLATLIST:
-        return DropDownComponentWrapper(DropDownFlatListComponent);
-      case LIST_MODE.SCROLLVIEW:
-        return DropDownComponentWrapper(DropDownScrollViewComponent);
-      case LIST_MODE.MODAL:
-        return DropDownModalComponent;
-      default: //
-    }
+      switch (listMode) {
+          case LIST_MODE.FLATLIST: return DropDownComponentWrapper(DropDownFlatListComponent);
+          case LIST_MODE.SCROLLVIEW: return DropDownComponentWrapper(DropDownScrollViewComponent);
+          case LIST_MODE.MODAL: return DropDownModalComponent;
+          default: //
+      }
   }, [
-    listMode,
-    DropDownFlatListComponent,
-    DropDownScrollViewComponent,
-    DropDownModalComponent,
-    DropDownComponentWrapper,
+      listMode,
+      DropDownFlatListComponent,
+      DropDownScrollViewComponent,
+      DropDownModalComponent,
+      DropDownComponentWrapper
   ]);
 
   /**
@@ -1960,47 +1880,42 @@ function Picker({
    * @returns {JSX.Element}
    */
   const DropDownBodyComponent = useMemo(() => {
-    if (open || listMode === LIST_MODE.MODAL) return DropDownComponent;
-    return null;
+      if (open || listMode === LIST_MODE.MODAL)
+          return DropDownComponent;
+      return null;
   }, [open, listMode, DropDownComponent]);
 
   /**
    * onRef.
    */
   const onRef = useCallback((ref) => {
-    pickerRef.current = ref;
+      pickerRef.current = ref
   }, []);
 
   /**
    * Pointer events.
    * @returns {string}
    */
-  const pointerEvents = useMemo(() => (disabled ? 'none' : 'auto'), [disabled]);
+  const pointerEvents = useMemo(() => disabled ? "none" : "auto", [disabled]);
 
   return (
-    <View style={_containerStyle} {...containerProps}>
-      <TouchableOpacity
-        style={_style}
-        onPress={__onPress}
-        onLayout={__onLayout}
-        {...props}
-        ref={onRef}
-        pointerEvents={pointerEvents}
-        disabled={disabled}
-        testID={testID}>
-        {_BodyComponent}
-        {_ArrowComponent}
-      </TouchableOpacity>
+      <>
+          <View style={_containerStyle} {...containerProps}>
+              <TouchableOpacity style={_style} onPress={__onPress} onLayout={__onLayout} {...props} ref={onRef} pointerEvents={pointerEvents} disabled={disabled} testID={testID}>
+                  {_BodyComponent}
+                  {_ArrowComponent}
+              </TouchableOpacity>
 
-      {DropDownBodyComponent}
-    </View>
+              {DropDownBodyComponent}
+          </View>
+      </>
   );
 }
 
 const styles = StyleSheet.create({
   flex: {
-    flex: 1,
-  },
+      flex: 1
+  }
 });
 
 export default memo(Picker);
